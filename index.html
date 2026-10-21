@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inland生产周报目录</title>
+<style>
+:root { --brand:#0a3d5c; --muted:#5b6c7d; --line:#c5d2de; --bg:#e8eef4; --surface:#f7fafc; }
+body { font-family: "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; margin:0;
+  background: linear-gradient(180deg,#d5e3ef,var(--bg)); color:#102033; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 2.5rem; }
+h1 { color: var(--brand); font-size: 1.6rem; margin: .3rem 0 .5rem; }
+.lede { color: var(--muted); font-size: .92rem; margin-bottom: 1.2rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; table-layout: fixed; }
+th, td { padding: .5rem .45rem; border-bottom: 1px solid var(--line); text-align: center; vertical-align: middle; }
+th { color: var(--muted); font-size: .72rem; text-transform: uppercase; background: #edf2f7; }
+th.num, td.num { text-align: center; font-variant-numeric: tabular-nums; }
+tbody tr:nth-child(odd) { background: #ffffff; }
+tbody tr:nth-child(even) { background: #eef4f9; }
+tbody tr.week-row { cursor: pointer; }
+tbody tr.week-row:hover { background: #e2edf6; }
+tbody tr.week-row td:first-child { color: var(--brand); font-weight: 600; }
+col.c-week { width: 12%; }
+col.c-date { width: 28%; }
+col.c-num { width: 12%; }
+a { color: var(--brand); font-weight: 600; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.foot { margin-top: 1rem; font-size: .75rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Inland生产周报目录（2026-09-21 ~ 2026-10-18）</h1>
+  <p class="lede">按生产日志数据生成；双机台 23MR6922 / 23MR6923；表列为两机 KPI 算术平均；含稼动率 / 速度 / 产量 / 工时细分，本周·上月日均·对比上周。</p>
+  <div class="panel">
+    <table>
+      <colgroup>
+        <col class="c-week" />
+        <col class="c-date" />
+        <col class="c-num" /><col class="c-num" /><col class="c-num" /><col class="c-num" /><col class="c-num" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>周</th><th>日期</th>
+          <th class="num">机台 (台)</th>
+          <th class="num">有产天 (天)</th>
+          <th class="num">稼动率 (%)</th>
+          <th class="num">速度 (m/min)</th>
+          <th class="num">产量 (m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="week-row" onclick="window.location.href='Inland_Weekly_2026W39.html'" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='Inland_Weekly_2026W39.html';event.preventDefault();}"><td>2026-W39</td><td>2026-09-21 ~ 2026-09-27</td><td class="num">2</td><td class="num">7.0</td><td class="num">76.8%</td><td class="num">3.18</td><td class="num">641.1</td></tr><tr class="week-row" onclick="window.location.href='Inland_Weekly_2026W40.html'" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='Inland_Weekly_2026W40.html';event.preventDefault();}"><td>2026-W40</td><td>2026-09-28 ~ 2026-10-04</td><td class="num">2</td><td class="num">7.0</td><td class="num">79.0%</td><td class="num">3.03</td><td class="num">644.5</td></tr><tr class="week-row" onclick="window.location.href='Inland_Weekly_2026W41.html'" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='Inland_Weekly_2026W41.html';event.preventDefault();}"><td>2026-W41</td><td>2026-10-05 ~ 2026-10-11</td><td class="num">2</td><td class="num">7.0</td><td class="num">87.0%</td><td class="num">2.96</td><td class="num">788.6</td></tr><tr class="week-row" onclick="window.location.href='Inland_Weekly_2026W42.html'" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='Inland_Weekly_2026W42.html';event.preventDefault();}"><td>2026-W42</td><td>2026-10-12 ~ 2026-10-18</td><td class="num">2</td><td class="num">7.0</td><td class="num">82.4%</td><td class="num">3.13</td><td class="num">883.7</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="foot">数据源：Production_Markers 2026年9月–2026年10月 · 稼动率金标准=machine_use_daily.json（周度 Algopex MU 展开到日）+ machine_use_monthly.json · Markers 文件数 8</p>
+</div>
+</body>
+</html>
