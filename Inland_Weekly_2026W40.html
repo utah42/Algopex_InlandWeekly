@@ -325,12 +325,22 @@ body.is-printing .mini-kpis {
     <h2>改善建议</h2>
     <div class="improve-cards">
       <article class="improve-card">
-        <h3>建议 1</h3>
-        <p class="placeholder">（待填写）</p>
+        <h3>1 · 换床仍高，继续压缩空闲间隔</h3>
+        <ul>
+          <li>本周 7 个有产日，换床两机合计约 42.8 h，日均约 6.1 h；较 W39 略降但仍偏高，10/4 单日约 9.6 h。</li>
+          <li>确保当一位操作员在处理当前裁剪作业的同时，另一位操作员在准备并检查下一床面料。</li>
+          <li>建议使用长排料图以减少换床浪费；下一床面料尽量贴近上一床，区域空置即启动输送。</li>
+          <li>10/1 有产偏短、换床相对可控，高峰日（9/28、9/30、10/4）需把并行准备做稳。</li>
+        </ul>
       </article>
       <article class="improve-card">
-        <h3>建议 2</h3>
-        <p class="placeholder">（待填写）</p>
+        <h3>2 · 稳住稼动回升，盯 Other 与卸料</h3>
+        <ul>
+          <li>本周两机平均稼动约 79.0%，较 W39 回升约 2 pp，但 2号（约 78.1%）略低于 1号（约 80.0%），继续对齐班次节奏。</li>
+          <li>Other 合计约 6.0 h、卸料约 5.7 h，均高于 W39，请排查非定位类停机（找料、改刀、等待确认等）。</li>
+          <li>减少在定位操作期间要检查的点数；确保排料图适应实际面料宽度。</li>
+          <li>检查是否没有因为转移铺布不当而浪费时间。</li>
+        </ul>
       </article>
     </div>
   </section>
@@ -674,15 +684,15 @@ function stackPctLabelPlugin(dayMeta) {
           ctx.fillStyle = "#ffffff";
           ctx.shadowColor = "rgba(0,0,0,0.45)";
           ctx.shadowBlur = 2;
-          if (tag && h >= 22) {
+          if (tag && h >= 28) {
             ctx.textBaseline = "middle";
-            ctx.font = "600 9px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
-            ctx.fillText(`${pct.toFixed(0)}%`, bar.x, cy - 5);
-            ctx.font = "700 8px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
-            ctx.fillText(tag, bar.x, cy + 6);
+            ctx.font = "700 13px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
+            ctx.fillText(`${pct.toFixed(0)}%`, bar.x, cy - 7);
+            ctx.font = "700 12px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
+            ctx.fillText(tag, bar.x, cy + 8);
           } else {
             ctx.textBaseline = "middle";
-            ctx.font = "600 9px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
+            ctx.font = "700 12px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
             ctx.fillText(`${pct.toFixed(0)}%`, bar.x, cy);
           }
           ctx.restore();
@@ -717,21 +727,18 @@ function renderTimeStackDual(cutterAggs) {
     stackKeys.forEach((sk, ski) => {
       const dsIdx = datasets.length;
       const ds = {
-        label: `${short} · ${sk.label}`,
+        // 图例只展示颜色含义；机台用柱边框 / #1#2 区分
+        label: sk.label,
         data: padded.map(d => d[sk.key] || 0),
         backgroundColor: sk.color,
         stack: `c${ci}`,
-        borderColor: CUTTER_COLORS[ci % CUTTER_COLORS.length],
-        // 机台色边框：仅外侧描边，同日两机内侧贴紧
-        borderWidth: ski === 0
-          ? (ci === 0
-              ? { top: 0, left: 1.5, right: 0, bottom: 0 }
-              : { top: 0, left: 0, right: 1.5, bottom: 0 })
-          : 0,
+        borderWidth: 0,
         categoryPercentage: 0.78,
         barPercentage: 0.98,
         maxBarThickness: 48,
-        _cutterTag: cutterTag
+        _cutterTag: cutterTag,
+        _stackKey: sk.key,
+        _legendShow: ci === 0
       };
       if (sk.pct) ds._pctKey = sk.key;
       datasets.push(ds);
@@ -752,10 +759,35 @@ function renderTimeStackDual(cutterAggs) {
           labels: {
             boxWidth: 10,
             font: { size: 9 },
-            filter(item) {
-              // show only net series per cutter + one shared series labels via first cutter
-              return item.text.includes("净裁剪") || item.text.includes("定位") || item.text.includes("卸料") || item.text.includes("换床") || item.text.includes("Other");
+            // 每种颜色只出现一次（不按机台重复）
+            generateLabels(chart) {
+              const items = [];
+              const seen = new Set();
+              chart.data.datasets.forEach((ds, i) => {
+                if (!ds || !ds._legendShow || !ds._stackKey || seen.has(ds._stackKey)) return;
+                seen.add(ds._stackKey);
+                items.push({
+                  text: ds.label,
+                  fillStyle: ds.backgroundColor,
+                  strokeStyle: ds.backgroundColor,
+                  lineWidth: 0,
+                  hidden: !chart.isDatasetVisible(i),
+                  datasetIndex: i
+                });
+              });
+              return items;
             }
+          },
+          onClick(e, legendItem, legend) {
+            const chart = legend.chart;
+            const clicked = chart.data.datasets[legendItem.datasetIndex];
+            if (!clicked || !clicked._stackKey) return;
+            const key = clicked._stackKey;
+            const hide = chart.isDatasetVisible(legendItem.datasetIndex);
+            chart.data.datasets.forEach((ds, i) => {
+              if (ds._stackKey === key) chart.setDatasetVisibility(i, !hide);
+            });
+            chart.update();
           }
         }
       },
