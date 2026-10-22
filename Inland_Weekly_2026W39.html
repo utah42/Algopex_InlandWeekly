@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Inland周报 2026-W39</title>
 <script src="chart.umd.min.js"></script>
+<script>
+/* 本地 Chart.js 优先；Pages/离线失败时回退国内 CDN（jsDelivr 常不可用） */
+if (typeof Chart === "undefined") {
+  document.write('<script src="https://lib.baomitu.com/Chart.js/4.4.1/chart.umd.min.js"><\/script>');
+}
+</script>
 <style>
 :root {
   --bg: #e8eef4;
