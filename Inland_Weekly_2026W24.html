@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inland周报 2026-W24</title>
+<script src="chart.umd.min.js"></script>
+<script>
+/* 本地 Chart.js 优先；Pages/离线失败时回退国内 CDN（jsDelivr 常不可用） */
+if (typeof Chart === "undefined") {
+  document.write('<script src="https://lib.baomitu.com/Chart.js/4.4.1/chart.umd.min.js"><\/script>');
+}
+</script>
+<style>
+:root {
+  --bg: #e8eef4;
+  --surface: #f7fafc;
+  --ink: #102033;
+  --muted: #5b6c7d;
+  --line: #c5d2de;
+  --brand: #0a3d5c;
+  --accent: #c45c26;
+  --up: #1f7a4d;
+  --down: #b42318;
+  --cutter-a: #0a3d5c;
+  --cutter-b: #c45c26;
+  --chg: #6b7280;
+  --font: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font); color: var(--ink);
+  background: linear-gradient(180deg, #d5e3ef, var(--bg));
+  min-height: 100vh; line-height: 1.5;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 1rem 2.5rem; }
+.sticky-head {
+  position: sticky; top: 0; z-index: 40;
+  margin: 0 0 1rem;
+  padding: .15rem .05rem .75rem;
+  background: linear-gradient(180deg, rgba(232,238,244,.98), rgba(247,250,252,.96));
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(16, 32, 51, .06);
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+}
+.sticky-head .head-row,
+.sticky-head h2,
+.sticky-head .kpis {
+  padding-left: 1.05rem;
+  padding-right: 1.05rem;
+}
+.sticky-head .head-row { padding-top: .5rem; }
+.sticky-head .kpis { padding-bottom: .15rem; }
+.sticky-head h2 {
+  color: var(--brand);
+  font-size: 1.02rem;
+  font-weight: 700;
+  margin: 0 0 .35rem;
+}
+.head-row {
+  display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+  flex-wrap: nowrap; padding: .65rem 0 .45rem;
+  border-bottom: 1px solid var(--line); margin-bottom: .5rem;
+}
+.head-left {
+  display: flex; align-items: baseline; gap: .65rem; min-width: 0; flex: 1;
+  white-space: nowrap; overflow: hidden;
+}
+h1 {
+  color: var(--brand); font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+  margin: 0; line-height: 1.2; flex-shrink: 0;
+}
+.lede {
+  color: var(--muted); font-size: .82rem; margin: 0;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.head-actions {
+  display: flex; align-items: center; gap: .45rem; flex-shrink: 0;
+}
+.head-legend {
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.head-legend .delta { margin: 0; cursor: default; }
+.head-actions a {
+  color: var(--brand); font-size: .78rem; text-decoration: none;
+  padding: .26rem .55rem; border: 1px solid var(--line); border-radius: 3px; background: #fff;
+}
+.head-actions button {
+  border: 1px solid var(--brand); background: var(--brand); color: #fff; border-radius: 3px;
+  padding: .26rem .6rem; font: inherit; font-size: .74rem; cursor: pointer; font-weight: 600;
+}
+.head-actions button:hover { background: #0c4d72; }
+.head-actions a:hover { background: #e8eef4; }
+.pills {
+  display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0;
+  flex-shrink: 0; align-items: center;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  border: 1px solid var(--line); border-radius: 999px; padding: .22rem .62rem;
+  background: #fff; font-size: .74rem; cursor: pointer; color: var(--muted);
+}
+.pill.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+.pill input { display: none; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: .55rem; }
+.kpi {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  padding: .65rem .8rem;
+}
+.kpi .label,
+.mini .k {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--brand);
+  letter-spacing: 0;
+  text-transform: none;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+.kpi .value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--brand);
+  font-variant-numeric: tabular-nums;
+  margin: .1rem 0;
+}
+.kpi .meta { font-size: .74rem; color: var(--muted); }
+.delta {
+  display: inline-flex; align-items: center; gap: .2rem;
+  padding: .18rem .45rem;
+  border-radius: 999px; font-size: .72rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; line-height: 1.2;
+  background: #e8eef4; color: var(--muted);
+}
+.delta.up {
+  color: #0f5c38; background: #d8f3e3; box-shadow: inset 0 0 0 1px #9fd4b5;
+}
+.delta.down {
+  color: #8f1d14; background: #fde2df; box-shadow: inset 0 0 0 1px #efb0a8;
+}
+.delta.flat {
+  color: #445566; background: #e8eef4; box-shadow: inset 0 0 0 1px #c5d2de;
+}
+.kpi .delta, .mini .delta { margin-top: .28rem; }
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  padding: 1rem 1.05rem; margin-bottom: 1rem;
+}
+.panel h2 { color: var(--brand); font-size: 1.02rem; margin-bottom: .35rem; }
+.panel .hint { font-size: .8rem; color: var(--muted); margin-bottom: .6rem; }
+.mini-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-bottom: .75rem; }
+.mini {
+  border: 1px solid var(--line); border-radius: 3px; padding: .55rem .6rem; background: #fff;
+}
+.mini.chg {
+  border-color: var(--chg);
+  background: var(--chg);
+}
+.mini.chg .k,
+.mini.chg .v { color: #ffffff; }
+.mini.chg .d { color: rgba(255, 255, 255, 0.88); }
+.mini.chg .delta.up {
+  color: #0f5c38; background: #d8f3e3; box-shadow: inset 0 0 0 1px #9fd4b5;
+}
+.mini.chg .delta.down {
+  color: #8f1d14; background: #fde2df; box-shadow: inset 0 0 0 1px #efb0a8;
+}
+.mini.chg .delta.flat {
+  color: #445566; background: #e8eef4; box-shadow: inset 0 0 0 1px #c5d2de;
+}
+.mini .v { font-size: 1.05rem; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; }
+.mini .d { font-size: .72rem; }
+.mini .d .delta { margin-top: .2rem; }
+.chart-box { position: relative; height: 300px; }
+.chart-box.tall { height: 460px; }
+.improve-section { margin-top: 0; }
+.improve-cards {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem;
+}
+.improve-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 4px;
+  border-top: 3px solid var(--accent); padding: .85rem .9rem;
+}
+.improve-card h3 {
+  color: var(--brand); font-size: .88rem; margin-bottom: .55rem;
+}
+.improve-card ul {
+  margin: 0; padding-left: 1.15rem; color: var(--ink);
+  font-size: .82rem; line-height: 1.55;
+}
+.improve-card li { margin-bottom: .4rem; }
+.improve-card li:last-child { margin-bottom: 0; }
+.improve-card .placeholder {
+  color: var(--muted); font-size: .82rem; font-style: italic; min-height: 3.2rem; margin: 0;
+}
+.footer {
+  margin-top: 1.25rem;
+  padding-top: .75rem;
+  border-top: 1px dashed var(--line);
+  font-size: .7rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+@media (max-width: 900px) {
+  .kpis, .mini-kpis { grid-template-columns: 1fr 1fr; }
+  .chart-box.tall { height: 320px; }
+  .improve-cards { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .kpis, .mini-kpis, .improve-cards { grid-template-columns: 1fr; }
+}
+body.is-printing .chart-box.tall {
+  height: 320px !important;
+  max-height: 320px !important;
+  overflow: hidden !important;
+}
+body.is-printing .kpis {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+body.is-printing .mini-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+@media print {
+  @page { size: A4 portrait; margin: 6mm 7mm; }
+  html, body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  body { min-height: 0; }
+  .no-print { display: none !important; }
+  .wrap {
+    max-width: none; margin: 0; padding: 0;
+    min-height: 285mm; display: flex; flex-direction: column;
+  }
+  .main-content { flex: 1 1 auto; }
+  .sticky-head {
+    position: static; max-height: none; overflow: visible;
+    box-shadow: none; backdrop-filter: none;
+    margin-bottom: .3rem; padding: .05rem 0 .25rem;
+  }
+  .sticky-head .head-row,
+  .sticky-head h2,
+  .sticky-head .kpis {
+    padding-left: .4rem; padding-right: .4rem;
+  }
+  .pills { display: none !important; }
+  .head-row { padding: .2rem 0; margin-bottom: .2rem; }
+  h1 { font-size: .95rem; }
+  .lede { font-size: .62rem; }
+  .sticky-head h2, .panel h2 { font-size: .78rem; margin-bottom: .15rem; }
+  .kpis {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: .3rem; margin-bottom: .25rem;
+  }
+  .kpi { padding: .28rem .35rem; }
+  .kpi .label, .mini .k { font-size: .72rem; }
+  .kpi .value, .mini .v { font-size: .82rem; }
+  .kpi .meta, .mini .d, .delta { font-size: .52rem; }
+  .panel { padding: .35rem .45rem; margin-bottom: .3rem; }
+  .panel .hint { display: none; }
+  .mini-kpis {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .25rem; margin-bottom: .25rem;
+  }
+  .mini { padding: .25rem .3rem; }
+  .chart-box.tall {
+    height: 300px !important; max-height: 300px !important;
+    overflow: hidden !important;
+  }
+  .chart-box canvas {
+    display: block !important; width: 100% !important; height: 100% !important;
+  }
+  .improve-section { break-inside: avoid; }
+  .improve-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .3rem;
+  }
+  .improve-card { padding: .3rem .35rem; }
+  .improve-card h3 { font-size: .68rem; margin-bottom: .15rem; }
+  .improve-card ul { font-size: .58rem; line-height: 1.3; }
+  .footer {
+    flex: 0 0 auto; margin-top: auto;
+    padding: .3rem .1rem 0; border-top: 1px solid var(--line);
+    font-size: .48rem; line-height: 1.25; color: #5b6c7d;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="main-content">
+  <div class="sticky-head">
+    <div class="head-row">
+      <div class="head-left">
+        <h1 id="weekTitle">2026-W24 生产周报</h1>
+        <p class="lede" id="weekRange">2026-06-08 ~ 2026-06-14</p>
+      </div>
+      <div class="pills no-print" id="cutterPills"></div>
+      <div class="head-actions">
+        <span class="head-legend" aria-label="对比标签颜色说明">
+          <span class="delta up">▲ 改善</span>
+          <span class="delta down">▼ 倒退</span>
+        </span>
+        <button type="button" id="btnExportPdf" class="no-print">导出 PDF</button>
+        <a class="no-print" href="index.html">← 周报目录</a>
+      </div>
+    </div>
+    <h2>主要生产指标（本周平均）</h2>
+    <section class="kpis" id="mainKpis"></section>
+  </div>
+
+  <section class="panel">
+    <h2>工时细分（两机合计 · 日度双柱）</h2>
+    <p class="hint">横轴固定 ISO 周 7 天；无产日留白占位。每日两机各一组堆叠柱（净裁剪→定位→卸料→Other→换床）。柱内数字为净裁剪/定位/卸料占该机当日 Available 百分比。</p>
+    <div class="mini-kpis" id="timeKpis"></div>
+    <div class="chart-box tall"><canvas id="chartTimeStack"></canvas></div>
+  </section>
+
+  <section class="panel improve-section">
+    <h2>改善建议</h2>
+    <div class="improve-cards">
+      <article class="improve-card">
+        <h3>建议 1</h3>
+        <p class="placeholder">（待填写）</p>
+      </article>
+      <article class="improve-card">
+        <h3>建议 2</h3>
+        <p class="placeholder">（待填写）</p>
+      </article>
+    </div>
+  </section>
+  </div>
+
+  <footer class="footer" id="footerNote"></footer>
+</div>
+
+<script>
+const DATA = {"iso_key": "2026-W24", "week_start": "2026-06-08", "week_end": "2026-06-14", "week_month_ym": "2026-06", "month_ym": "2026-05", "prev_iso_key": "2026-W23", "sources": ["Production_Markers_20260301_20260331.xlsx", "Production_Markers_20260401_20260430.xlsx", "Production_Markers_20260501_20260531.xlsx", "Production_Markers_20260601_20260630.xlsx", "Production_Markers_20260701_20260731.xlsx", "Production_Markers_20260801_20260831.xlsx", "Production_Markers_20260901_20260930.xlsx", "Production_Markers_20261001_20261031.xlsx"], "config": {"mu_source": "algopex_machine_use", "mu_gold_file": "machine_use_daily.json + machine_use_monthly.json", "mu_source_chart": "Screenshot 2026-10-19 170653.png (weekly MU W38-W42); 屏幕截图 2026-10-27 111821.png (Algopex Last-7d daily MU 10/21-10/27); 屏幕截图 2026-11-02 090822.png (Algopex Last-7d daily MU 10/27-11/01 Per Cutter); Screenshot 2026-10-12 112846.png (23MR6922 monthly MU); Screenshot 2026-10-12 112925.png (23MR6923 monthly MU); Screenshot 2026-10-12 111522.png (both machines)", "h_avail": 10.55, "input_h_per_cutter_day": 0.85, "note_zh": "稼动率%=Algopex Machine Use %（日度优先，缺则用自然月单机值）；月 MU=100×Σnet_h÷Σavailable_h。 Available/Idle 由 MU 反推；Input≈0.85h/机/日。速度/产量/工时来自 Production_Markers。"}, "cutters": [{"id": "23MR6922", "name": "23MR6922-iP6    1号裁床", "markers": 7414}, {"id": "23MR6923", "name": "23MR6923-iP6    2号裁床", "markers": 6801}], "week_rows": [{"day": "2026-06-08", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4198.93, "material_m": 168.58, "net_h": 16.0, "net_h_raw": 21.58, "pos_h": 0.5289, "off_h": 0.0003, "oth_h": 0.3525, "chg_h": 2.034, "speed": 3.2429, "markers": 33, "mu_pct": 88.99}, {"day": "2026-06-08", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4831.08, "material_m": 172.09, "net_h": 16.0, "net_h_raw": 21.3156, "pos_h": 0.8456, "off_h": 0.0006, "oth_h": 0.2792, "chg_h": 2.4883, "speed": 3.7774, "markers": 47, "mu_pct": 88.69}, {"day": "2026-06-09", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4974.33, "material_m": 161.43, "net_h": 16.0, "net_h_raw": 22.0108, "pos_h": 0.6525, "off_h": 0.025, "oth_h": 0.1269, "chg_h": 1.881, "speed": 3.7666, "markers": 43, "mu_pct": 88.99}, {"day": "2026-06-09", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4575.74, "material_m": 169.81, "net_h": 16.0, "net_h_raw": 22.1433, "pos_h": 0.6836, "off_h": 0.0225, "oth_h": 0.3147, "chg_h": 2.1904, "speed": 3.444, "markers": 36, "mu_pct": 88.69}, {"day": "2026-06-10", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4596.49, "material_m": 149.99, "net_h": 16.0, "net_h_raw": 21.5414, "pos_h": 0.7342, "off_h": 0.0003, "oth_h": 0.3594, "chg_h": 2.262, "speed": 3.5563, "markers": 35, "mu_pct": 88.99}, {"day": "2026-06-10", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3927.66, "material_m": 133.81, "net_h": 16.0, "net_h_raw": 20.3333, "pos_h": 0.565, "off_h": 0.0217, "oth_h": 0.5058, "chg_h": 1.8207, "speed": 3.2194, "markers": 29, "mu_pct": 88.69}, {"day": "2026-06-11", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4130.91, "material_m": 135.64, "net_h": 16.0, "net_h_raw": 20.4344, "pos_h": 0.7939, "off_h": 0.7339, "oth_h": 0.7378, "chg_h": 2.7709, "speed": 3.3692, "markers": 39, "mu_pct": 88.99}, {"day": "2026-06-11", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4734.1, "material_m": 169.43, "net_h": 16.0, "net_h_raw": 21.5156, "pos_h": 0.5872, "off_h": 0.7447, "oth_h": 0.2833, "chg_h": 2.2523, "speed": 3.6672, "markers": 29, "mu_pct": 88.69}, {"day": "2026-06-12", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4353.38, "material_m": 151.79, "net_h": 16.0, "net_h_raw": 21.0994, "pos_h": 0.5803, "off_h": 0.0022, "oth_h": 0.7233, "chg_h": 2.1538, "speed": 3.4388, "markers": 34, "mu_pct": 88.99}, {"day": "2026-06-12", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4354.12, "material_m": 159.96, "net_h": 16.0, "net_h_raw": 21.0639, "pos_h": 0.4986, "off_h": 0.0, "oth_h": 0.2078, "chg_h": 2.2113, "speed": 3.4452, "markers": 31, "mu_pct": 88.69}, {"day": "2026-06-13", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4136.2, "material_m": 156.11, "net_h": 16.0, "net_h_raw": 20.5325, "pos_h": 0.5447, "off_h": 0.0133, "oth_h": 0.4497, "chg_h": 1.9614, "speed": 3.3574, "markers": 33, "mu_pct": 88.99}, {"day": "2026-06-13", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4383.03, "material_m": 171.42, "net_h": 16.0, "net_h_raw": 22.3261, "pos_h": 0.4875, "off_h": 0.0, "oth_h": 0.2417, "chg_h": 2.0539, "speed": 3.272, "markers": 34, "mu_pct": 88.69}, {"day": "2026-06-14", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 1367.03, "material_m": 43.63, "net_h": 6.4044, "net_h_raw": 6.4044, "pos_h": 0.1653, "off_h": 0.005, "oth_h": 0.2422, "chg_h": 0.6011, "speed": 3.5575, "markers": 9, "mu_pct": 88.99}, {"day": "2026-06-14", "ym": "2026-06", "iso_key": "2026-W24", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 1401.29, "material_m": 46.78, "net_h": 6.3353, "net_h_raw": 6.3353, "pos_h": 0.1142, "off_h": 0.0, "oth_h": 0.1528, "chg_h": 0.452, "speed": 3.6865, "markers": 7, "mu_pct": 88.69}], "prev_rows": [{"day": "2026-06-01", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3177.71, "material_m": 112.32, "net_h": 15.7633, "net_h_raw": 15.7633, "pos_h": 0.4586, "off_h": 0.0103, "oth_h": 0.0394, "chg_h": 1.1202, "speed": 3.3598, "markers": 19, "mu_pct": 88.99}, {"day": "2026-06-02", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4302.04, "material_m": 168.39, "net_h": 16.0, "net_h_raw": 22.0733, "pos_h": 0.5, "off_h": 0.0006, "oth_h": 0.0861, "chg_h": 1.5141, "speed": 3.2483, "markers": 37, "mu_pct": 88.99}, {"day": "2026-06-02", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 2016.35, "material_m": 70.0, "net_h": 9.0253, "net_h_raw": 9.0253, "pos_h": 0.2025, "off_h": 0.0, "oth_h": 0.0297, "chg_h": 0.5506, "speed": 3.7235, "markers": 10, "mu_pct": 88.69}, {"day": "2026-06-03", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4221.81, "material_m": 154.35, "net_h": 16.0, "net_h_raw": 19.7942, "pos_h": 0.6408, "off_h": 0.0, "oth_h": 0.1044, "chg_h": 4.641, "speed": 3.5548, "markers": 30, "mu_pct": 88.99}, {"day": "2026-06-03", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4042.9, "material_m": 131.18, "net_h": 16.0, "net_h_raw": 21.3453, "pos_h": 0.6744, "off_h": 0.0, "oth_h": 0.5156, "chg_h": 1.8717, "speed": 3.1567, "markers": 31, "mu_pct": 88.69}, {"day": "2026-06-04", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4212.22, "material_m": 156.12, "net_h": 16.0, "net_h_raw": 19.9642, "pos_h": 0.9119, "off_h": 0.0, "oth_h": 0.1889, "chg_h": 3.2766, "speed": 3.5165, "markers": 42, "mu_pct": 88.99}, {"day": "2026-06-04", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3839.53, "material_m": 162.01, "net_h": 16.0, "net_h_raw": 20.5867, "pos_h": 0.6569, "off_h": 0.0, "oth_h": 0.2731, "chg_h": 3.3716, "speed": 3.1084, "markers": 50, "mu_pct": 88.69}, {"day": "2026-06-05", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4643.14, "material_m": 158.32, "net_h": 16.0, "net_h_raw": 22.3242, "pos_h": 0.6664, "off_h": 0.0, "oth_h": 0.0633, "chg_h": 2.06, "speed": 3.4665, "markers": 42, "mu_pct": 88.99}, {"day": "2026-06-05", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4235.77, "material_m": 168.62, "net_h": 16.0, "net_h_raw": 21.5008, "pos_h": 0.6469, "off_h": 0.0003, "oth_h": 0.175, "chg_h": 2.5267, "speed": 3.2834, "markers": 40, "mu_pct": 88.69}, {"day": "2026-06-06", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3792.33, "material_m": 147.23, "net_h": 16.0, "net_h_raw": 19.0822, "pos_h": 0.7031, "off_h": 0.3347, "oth_h": 0.3942, "chg_h": 3.604, "speed": 3.3123, "markers": 35, "mu_pct": 88.99}, {"day": "2026-06-06", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4026.32, "material_m": 144.91, "net_h": 16.0, "net_h_raw": 20.7031, "pos_h": 0.5578, "off_h": 0.0, "oth_h": 0.6289, "chg_h": 2.3923, "speed": 3.2413, "markers": 34, "mu_pct": 88.69}, {"day": "2026-06-07", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4315.26, "material_m": 161.58, "net_h": 16.0, "net_h_raw": 19.9797, "pos_h": 0.66, "off_h": 0.0164, "oth_h": 0.0186, "chg_h": 3.9978, "speed": 3.5997, "markers": 51, "mu_pct": 88.99}, {"day": "2026-06-07", "ym": "2026-06", "iso_key": "2026-W23", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4204.28, "material_m": 136.47, "net_h": 16.0, "net_h_raw": 20.1786, "pos_h": 0.5522, "off_h": 0.0339, "oth_h": 0.1019, "chg_h": 3.8355, "speed": 3.4726, "markers": 28, "mu_pct": 88.69}], "month_rows": [{"day": "2026-05-01", "ym": "2026-05", "iso_key": "2026-W18", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 1346.76, "material_m": 38.21, "net_h": 6.775, "net_h_raw": 6.775, "pos_h": 0.2867, "off_h": 0.0, "oth_h": 0.0772, "chg_h": 0.5038, "speed": 3.3131, "markers": 10, "mu_pct": 83.85}, {"day": "2026-05-01", "ym": "2026-05", "iso_key": "2026-W18", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 1411.59, "material_m": 60.44, "net_h": 6.2717, "net_h_raw": 6.2717, "pos_h": 0.4331, "off_h": 0.0003, "oth_h": 0.0419, "chg_h": 0.9734, "speed": 3.7512, "markers": 13, "mu_pct": 87.32}, {"day": "2026-05-03", "ym": "2026-05", "iso_key": "2026-W18", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3276.42, "material_m": 109.25, "net_h": 14.2817, "net_h_raw": 14.2817, "pos_h": 0.9308, "off_h": 0.0, "oth_h": 0.1653, "chg_h": 1.9128, "speed": 3.8236, "markers": 21, "mu_pct": 83.85}, {"day": "2026-05-03", "ym": "2026-05", "iso_key": "2026-W18", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3190.99, "material_m": 123.95, "net_h": 15.2489, "net_h_raw": 15.2489, "pos_h": 0.81, "off_h": 0.0, "oth_h": 0.0436, "chg_h": 1.8409, "speed": 3.4877, "markers": 28, "mu_pct": 87.32}, {"day": "2026-05-04", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4608.71, "material_m": 164.54, "net_h": 16.0, "net_h_raw": 21.0889, "pos_h": 1.0442, "off_h": 0.0017, "oth_h": 0.0894, "chg_h": 2.7415, "speed": 3.6423, "markers": 33, "mu_pct": 83.85}, {"day": "2026-05-04", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4616.21, "material_m": 171.81, "net_h": 16.0, "net_h_raw": 20.4831, "pos_h": 0.7686, "off_h": 0.0231, "oth_h": 0.0781, "chg_h": 2.9598, "speed": 3.7561, "markers": 34, "mu_pct": 87.32}, {"day": "2026-05-05", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 946.93, "material_m": 39.77, "net_h": 4.1839, "net_h_raw": 4.1839, "pos_h": 0.1419, "off_h": 0.1619, "oth_h": 0.0533, "chg_h": 0.5681, "speed": 3.7721, "markers": 5, "mu_pct": 83.85}, {"day": "2026-05-05", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4857.47, "material_m": 147.1, "net_h": 16.0, "net_h_raw": 21.1989, "pos_h": 0.6539, "off_h": 0.0169, "oth_h": 0.0858, "chg_h": 2.4397, "speed": 3.819, "markers": 35, "mu_pct": 87.32}, {"day": "2026-05-06", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 1180.0, "material_m": 42.62, "net_h": 5.8192, "net_h_raw": 5.8192, "pos_h": 0.2075, "off_h": 0.0, "oth_h": 0.0611, "chg_h": 0.6031, "speed": 3.3796, "markers": 9, "mu_pct": 83.85}, {"day": "2026-05-06", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4629.47, "material_m": 171.28, "net_h": 16.0, "net_h_raw": 21.2489, "pos_h": 1.0031, "off_h": 0.0567, "oth_h": 0.3989, "chg_h": 2.7219, "speed": 3.6311, "markers": 57, "mu_pct": 87.32}, {"day": "2026-05-07", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4854.8, "material_m": 163.79, "net_h": 16.0, "net_h_raw": 21.1472, "pos_h": 0.9056, "off_h": 0.0486, "oth_h": 0.0258, "chg_h": 2.9265, "speed": 3.8262, "markers": 39, "mu_pct": 83.85}, {"day": "2026-05-07", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4496.37, "material_m": 166.09, "net_h": 16.0, "net_h_raw": 21.2314, "pos_h": 0.6258, "off_h": 0.0003, "oth_h": 0.2844, "chg_h": 2.0853, "speed": 3.5297, "markers": 34, "mu_pct": 87.32}, {"day": "2026-05-08", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3692.56, "material_m": 127.86, "net_h": 16.0, "net_h_raw": 16.6567, "pos_h": 0.4675, "off_h": 0.0289, "oth_h": 0.0264, "chg_h": 7.3537, "speed": 3.6948, "markers": 23, "mu_pct": 83.85}, {"day": "2026-05-08", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3206.47, "material_m": 130.63, "net_h": 16.0, "net_h_raw": 16.8292, "pos_h": 0.4636, "off_h": 0.0003, "oth_h": 0.2478, "chg_h": 7.4198, "speed": 3.1755, "markers": 29, "mu_pct": 87.32}, {"day": "2026-05-09", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3136.03, "material_m": 108.97, "net_h": 16.0, "net_h_raw": 16.0936, "pos_h": 0.5067, "off_h": 0.0003, "oth_h": 0.0886, "chg_h": 1.8885, "speed": 3.2477, "markers": 25, "mu_pct": 83.85}, {"day": "2026-05-09", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3016.87, "material_m": 108.8, "net_h": 15.15, "net_h_raw": 15.15, "pos_h": 0.5681, "off_h": 0.0003, "oth_h": 0.1406, "chg_h": 1.8896, "speed": 3.3189, "markers": 21, "mu_pct": 87.32}, {"day": "2026-05-10", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 887.26, "material_m": 29.62, "net_h": 3.6408, "net_h_raw": 3.6408, "pos_h": 0.1033, "off_h": 0.0044, "oth_h": 0.02, "chg_h": 0.6889, "speed": 4.0616, "markers": 9, "mu_pct": 83.85}, {"day": "2026-05-10", "ym": "2026-05", "iso_key": "2026-W19", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 807.58, "material_m": 24.79, "net_h": 4.1839, "net_h_raw": 4.1839, "pos_h": 0.0578, "off_h": 0.0, "oth_h": 0.0467, "chg_h": 0.3018, "speed": 3.217, "markers": 3, "mu_pct": 87.32}, {"day": "2026-05-11", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4612.26, "material_m": 172.9, "net_h": 16.0, "net_h_raw": 21.1089, "pos_h": 0.6717, "off_h": 0.1728, "oth_h": 0.2686, "chg_h": 2.3447, "speed": 3.6416, "markers": 47, "mu_pct": 83.85}, {"day": "2026-05-11", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4372.69, "material_m": 165.81, "net_h": 16.0, "net_h_raw": 21.7647, "pos_h": 0.5503, "off_h": 0.0111, "oth_h": 0.1839, "chg_h": 2.1389, "speed": 3.3485, "markers": 32, "mu_pct": 87.32}, {"day": "2026-05-12", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4441.7, "material_m": 149.4, "net_h": 16.0, "net_h_raw": 20.9669, "pos_h": 0.99, "off_h": 0.0006, "oth_h": 0.135, "chg_h": 2.8247, "speed": 3.5307, "markers": 46, "mu_pct": 83.85}, {"day": "2026-05-12", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4094.28, "material_m": 150.5, "net_h": 16.0, "net_h_raw": 21.0489, "pos_h": 0.83, "off_h": 0.0156, "oth_h": 0.0917, "chg_h": 2.77, "speed": 3.2419, "markers": 41, "mu_pct": 87.32}, {"day": "2026-05-13", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3587.22, "material_m": 120.62, "net_h": 16.0, "net_h_raw": 17.3294, "pos_h": 0.55, "off_h": 0.0806, "oth_h": 0.4564, "chg_h": 1.7925, "speed": 3.45, "markers": 23, "mu_pct": 83.85}, {"day": "2026-05-13", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3542.94, "material_m": 131.86, "net_h": 16.0, "net_h_raw": 17.0578, "pos_h": 0.4956, "off_h": 0.0, "oth_h": 0.1972, "chg_h": 2.2835, "speed": 3.4617, "markers": 25, "mu_pct": 87.32}, {"day": "2026-05-14", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 2915.45, "material_m": 96.23, "net_h": 14.5411, "net_h_raw": 14.5411, "pos_h": 0.6067, "off_h": 0.0, "oth_h": 0.1553, "chg_h": 1.8382, "speed": 3.3416, "markers": 32, "mu_pct": 83.85}, {"day": "2026-05-14", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 2243.98, "material_m": 95.29, "net_h": 13.2689, "net_h_raw": 13.2689, "pos_h": 0.6411, "off_h": 0.0, "oth_h": 0.0783, "chg_h": 1.6151, "speed": 2.8186, "markers": 27, "mu_pct": 87.32}, {"day": "2026-05-15", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3694.2, "material_m": 119.79, "net_h": 16.0, "net_h_raw": 16.4611, "pos_h": 0.4144, "off_h": 0.0089, "oth_h": 0.5608, "chg_h": 7.0956, "speed": 3.7403, "markers": 27, "mu_pct": 83.85}, {"day": "2026-05-15", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3382.62, "material_m": 113.1, "net_h": 16.0, "net_h_raw": 16.2594, "pos_h": 0.5661, "off_h": 0.0, "oth_h": 0.1506, "chg_h": 7.5059, "speed": 3.4673, "markers": 29, "mu_pct": 87.32}, {"day": "2026-05-16", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4506.83, "material_m": 174.18, "net_h": 16.0, "net_h_raw": 21.3708, "pos_h": 0.6339, "off_h": 0.0031, "oth_h": 0.3253, "chg_h": 1.8846, "speed": 3.5148, "markers": 31, "mu_pct": 83.85}, {"day": "2026-05-16", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4680.18, "material_m": 165.0, "net_h": 16.0, "net_h_raw": 22.4519, "pos_h": 0.5597, "off_h": 0.0003, "oth_h": 0.4286, "chg_h": 2.0814, "speed": 3.4742, "markers": 28, "mu_pct": 87.32}, {"day": "2026-05-17", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 1313.41, "material_m": 42.6, "net_h": 6.1178, "net_h_raw": 6.1178, "pos_h": 0.1378, "off_h": 0.0022, "oth_h": 0.0347, "chg_h": 0.6284, "speed": 3.5781, "markers": 11, "mu_pct": 83.85}, {"day": "2026-05-17", "ym": "2026-05", "iso_key": "2026-W20", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 1019.06, "material_m": 35.25, "net_h": 4.9494, "net_h_raw": 4.9494, "pos_h": 0.1203, "off_h": 0.0003, "oth_h": 0.1247, "chg_h": 0.7015, "speed": 3.4316, "markers": 11, "mu_pct": 87.32}, {"day": "2026-05-18", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 2989.63, "material_m": 118.53, "net_h": 14.7589, "net_h_raw": 14.7589, "pos_h": 0.5194, "off_h": 0.1492, "oth_h": 0.0739, "chg_h": 1.7384, "speed": 3.3761, "markers": 28, "mu_pct": 83.85}, {"day": "2026-05-18", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3144.68, "material_m": 104.82, "net_h": 15.8258, "net_h_raw": 15.8258, "pos_h": 0.2925, "off_h": 0.0003, "oth_h": 0.4478, "chg_h": 1.2339, "speed": 3.3118, "markers": 18, "mu_pct": 87.32}, {"day": "2026-05-19", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4896.67, "material_m": 157.43, "net_h": 16.0, "net_h_raw": 21.5347, "pos_h": 0.6172, "off_h": 0.1525, "oth_h": 0.0619, "chg_h": 2.4787, "speed": 3.7897, "markers": 47, "mu_pct": 83.85}, {"day": "2026-05-19", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3960.63, "material_m": 145.96, "net_h": 16.0, "net_h_raw": 20.1222, "pos_h": 0.5072, "off_h": 0.3153, "oth_h": 0.3364, "chg_h": 2.1513, "speed": 3.2805, "markers": 33, "mu_pct": 87.32}, {"day": "2026-05-20", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4489.26, "material_m": 161.0, "net_h": 16.0, "net_h_raw": 21.3289, "pos_h": 0.7447, "off_h": 0.0164, "oth_h": 0.0836, "chg_h": 2.6167, "speed": 3.508, "markers": 38, "mu_pct": 83.85}, {"day": "2026-05-20", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4279.17, "material_m": 147.19, "net_h": 16.0, "net_h_raw": 21.7292, "pos_h": 0.6769, "off_h": 0.0003, "oth_h": 0.3342, "chg_h": 2.4161, "speed": 3.2822, "markers": 32, "mu_pct": 87.32}, {"day": "2026-05-21", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4047.3, "material_m": 120.33, "net_h": 16.0, "net_h_raw": 21.1256, "pos_h": 0.7828, "off_h": 0.0008, "oth_h": 0.6714, "chg_h": 2.4603, "speed": 3.1931, "markers": 38, "mu_pct": 83.85}, {"day": "2026-05-21", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4196.46, "material_m": 149.4, "net_h": 16.0, "net_h_raw": 21.3422, "pos_h": 0.6983, "off_h": 0.0006, "oth_h": 0.1492, "chg_h": 2.7843, "speed": 3.2771, "markers": 40, "mu_pct": 87.32}, {"day": "2026-05-22", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4216.5, "material_m": 144.51, "net_h": 16.0, "net_h_raw": 20.6336, "pos_h": 0.5681, "off_h": 0.2236, "oth_h": 0.2133, "chg_h": 1.9873, "speed": 3.4059, "markers": 26, "mu_pct": 83.85}, {"day": "2026-05-22", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4036.0, "material_m": 147.21, "net_h": 16.0, "net_h_raw": 20.0411, "pos_h": 0.5636, "off_h": 0.0003, "oth_h": 0.5106, "chg_h": 2.8218, "speed": 3.3564, "markers": 34, "mu_pct": 87.32}, {"day": "2026-05-23", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4508.39, "material_m": 178.46, "net_h": 16.0, "net_h_raw": 20.1717, "pos_h": 1.0614, "off_h": 0.4536, "oth_h": 0.0933, "chg_h": 3.6594, "speed": 3.725, "markers": 64, "mu_pct": 83.85}, {"day": "2026-05-23", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4448.2, "material_m": 166.01, "net_h": 16.0, "net_h_raw": 21.0878, "pos_h": 0.8475, "off_h": 0.1439, "oth_h": 0.2217, "chg_h": 2.769, "speed": 3.5156, "markers": 38, "mu_pct": 87.32}, {"day": "2026-05-24", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 1259.6, "material_m": 32.49, "net_h": 6.7303, "net_h_raw": 6.7303, "pos_h": 0.2569, "off_h": 0.0, "oth_h": 0.0917, "chg_h": 0.518, "speed": 3.1192, "markers": 14, "mu_pct": 83.85}, {"day": "2026-05-24", "ym": "2026-05", "iso_key": "2026-W21", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 1165.86, "material_m": 40.29, "net_h": 6.5419, "net_h_raw": 6.5419, "pos_h": 0.1531, "off_h": 0.0, "oth_h": 0.0272, "chg_h": 0.4287, "speed": 2.9702, "markers": 6, "mu_pct": 87.32}, {"day": "2026-05-25", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 2640.93, "material_m": 89.59, "net_h": 11.8486, "net_h_raw": 11.8486, "pos_h": 0.5978, "off_h": 0.4239, "oth_h": 0.1011, "chg_h": 4.4606, "speed": 3.7148, "markers": 30, "mu_pct": 83.85}, {"day": "2026-05-25", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 2846.03, "material_m": 108.96, "net_h": 14.1756, "net_h_raw": 14.1756, "pos_h": 0.4128, "off_h": 0.2767, "oth_h": 0.3811, "chg_h": 1.4599, "speed": 3.3462, "markers": 27, "mu_pct": 87.32}, {"day": "2026-05-26", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4453.42, "material_m": 144.52, "net_h": 16.0, "net_h_raw": 21.1825, "pos_h": 0.6414, "off_h": 0.2867, "oth_h": 0.1189, "chg_h": 1.8534, "speed": 3.504, "markers": 38, "mu_pct": 83.85}, {"day": "2026-05-26", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4385.65, "material_m": 149.06, "net_h": 16.0, "net_h_raw": 21.7628, "pos_h": 0.5861, "off_h": 0.2497, "oth_h": 0.1992, "chg_h": 1.9962, "speed": 3.3587, "markers": 26, "mu_pct": 87.32}, {"day": "2026-05-27", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4389.69, "material_m": 149.62, "net_h": 16.0, "net_h_raw": 22.0361, "pos_h": 0.4683, "off_h": 0.0003, "oth_h": 0.0669, "chg_h": 1.8946, "speed": 3.3201, "markers": 28, "mu_pct": 83.85}, {"day": "2026-05-27", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 3272.88, "material_m": 120.16, "net_h": 16.0, "net_h_raw": 19.2758, "pos_h": 0.4994, "off_h": 0.0, "oth_h": 1.8606, "chg_h": 2.9514, "speed": 2.8299, "markers": 31, "mu_pct": 87.32}, {"day": "2026-05-28", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4976.7, "material_m": 147.32, "net_h": 16.0, "net_h_raw": 22.5972, "pos_h": 0.6078, "off_h": 0.0, "oth_h": 0.1319, "chg_h": 2.1166, "speed": 3.6706, "markers": 32, "mu_pct": 83.85}, {"day": "2026-05-28", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 2973.92, "material_m": 124.28, "net_h": 16.0, "net_h_raw": 19.5353, "pos_h": 0.7806, "off_h": 0.0, "oth_h": 0.1031, "chg_h": 4.1114, "speed": 2.5372, "markers": 39, "mu_pct": 87.32}, {"day": "2026-05-29", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4462.71, "material_m": 140.7, "net_h": 16.0, "net_h_raw": 20.8119, "pos_h": 0.5919, "off_h": 0.0003, "oth_h": 0.1625, "chg_h": 2.0535, "speed": 3.5738, "markers": 31, "mu_pct": 83.85}, {"day": "2026-05-29", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6923", "cutter_name": "23MR6923-iP6    2号裁床", "perimeter_m": 4056.36, "material_m": 140.68, "net_h": 16.0, "net_h_raw": 19.8336, "pos_h": 0.7856, "off_h": 0.0461, "oth_h": 1.0808, "chg_h": 2.0495, "speed": 3.4087, "markers": 43, "mu_pct": 87.32}, {"day": "2026-05-30", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 4894.8, "material_m": 166.68, "net_h": 16.0, "net_h_raw": 22.3631, "pos_h": 0.4856, "off_h": 0.0022, "oth_h": 0.1328, "chg_h": 1.5569, "speed": 3.648, "markers": 28, "mu_pct": 83.85}, {"day": "2026-05-31", "ym": "2026-05", "iso_key": "2026-W22", "cutter": "23MR6922", "cutter_name": "23MR6922-iP6    1号裁床", "perimeter_m": 3163.62, "material_m": 125.31, "net_h": 15.4519, "net_h_raw": 15.4519, "pos_h": 0.4, "off_h": 0.1689, "oth_h": 0.09, "chg_h": 1.3762, "speed": 3.4123, "markers": 25, "mu_pct": 83.85}], "summary_avg": {"material_m": 995.2, "mu": 88.8, "speed": 3.49, "cutters": 2, "active_days": 7.0, "net_h": 204.74, "pos_h": 7.78, "off_h": 1.57, "oth_h": 4.98, "chg_h": 27.13, "by_cutter": {"23MR6922": {"material_m": 967.2, "mu": 89.0, "speed": 3.47, "active_days": 7, "net_h": 102.4, "pos_h": 4.0, "off_h": 0.78, "oth_h": 2.99, "chg_h": 13.66}, "23MR6923": {"material_m": 1023.3, "mu": 88.7, "speed": 3.5, "active_days": 7, "net_h": 102.34, "pos_h": 3.78, "off_h": 0.79, "oth_h": 1.99, "chg_h": 13.47}}}, "prev_summary_avg": {"material_m": 935.8, "mu": 88.8, "speed": 3.38, "cutters": 2, "active_days": 6.5, "net_h": 200.79, "pos_h": 7.83, "off_h": 0.39, "oth_h": 2.62, "chg_h": 34.76, "by_cutter": {"23MR6922": {"material_m": 1058.3, "mu": 89.0, "speed": 3.44, "active_days": 7, "net_h": 111.76, "pos_h": 4.54, "off_h": 0.36, "oth_h": 0.9, "chg_h": 20.21}, "23MR6923": {"material_m": 813.2, "mu": 88.7, "speed": 3.33, "active_days": 6, "net_h": 89.03, "pos_h": 3.29, "off_h": 0.03, "oth_h": 1.72, "chg_h": 14.55}}}};
+const state = {
+  selected: {},
+  charts: {}
+};
+
+const CUTTER_COLORS = ["#0a3d5c", "#c45c26", "#1a8a7a", "#8e44ad"];
+const STACK_COLORS = {
+  net: "#1a8a7a",
+  pos: "#2980b9",
+  off: "#e67e22",
+  oth: "#c0392b",
+  chg: "#6b7280" // 与 .mini.chg / --chg 一致
+};
+
+function destroyChart(key) {
+  if (state.charts[key]) { state.charts[key].destroy(); state.charts[key] = null; }
+}
+
+function selectedCutters() {
+  return (DATA.cutters || []).map(c => c.id).filter(id => state.selected[id]);
+}
+
+function filterRows(rows) {
+  const sel = new Set(selectedCutters());
+  return rows.filter(r => sel.has(r.cutter));
+}
+
+function shortCutterLabel(c) {
+  const name = (c.name || c.id || "").trim();
+  // Prefer trailing "N号裁床" style if present
+  const m = name.match(/(\d+)\s*号裁床/);
+  if (m) return m[0];
+  if (name.length > 18) return c.id;
+  return name || c.id;
+}
+
+function enrichCutterDay(row, hAvail, inputPer) {
+  const muFromGold = row.mu_pct != null && !Number.isNaN(row.mu_pct);
+  const mu = muFromGold
+    ? row.mu_pct
+    : (hAvail > 0 ? 100 * row.net_h / hAvail : null);
+  const avail = (mu != null && mu > 0) ? row.net_h / (mu / 100) : hAvail;
+  const input_h = inputPer;
+  const idle_h = Math.max(0, avail - row.net_h - input_h - row.pos_h - row.off_h - row.oth_h);
+  return {
+    day: row.day,
+    cutter: row.cutter,
+    cutter_name: row.cutter_name,
+    n: 1,
+    avail_h: avail,
+    input_h,
+    idle_h,
+    net_h: row.net_h,
+    pos_h: row.pos_h,
+    off_h: row.off_h,
+    oth_h: row.oth_h,
+    chg_h: row.chg_h || 0,
+    material_m: row.material_m,
+    perimeter_m: row.perimeter_m,
+    speed: row.speed,
+    mu,
+    mu_from_gold: muFromGold
+  };
+}
+
+function aggCutterPeriod(rows, hAvail, inputPer) {
+  if (!rows.length) {
+    return {
+      days: [], material_m: 0, net_h: 0, pos_h: 0, off_h: 0, oth_h: 0, chg_h: 0,
+      input_h: 0, idle_h: 0, avail_h: 0, mu: null, speed: null, active_days: 0
+    };
+  }
+  const days = rows.map(r => enrichCutterDay(r, hAvail, inputPer));
+  const sum = (k) => days.reduce((a, d) => a + d[k], 0);
+  const speeds = days.map(d => d.speed).filter(v => v != null);
+  const avail = sum("avail_h");
+  const net = sum("net_h");
+  let muWeighted = null;
+  {
+    let netFromMu = 0, availFromMu = 0;
+    days.forEach(d => {
+      if (d.mu_from_gold && d.mu != null && d.mu > 0 && d.net_h > 0) {
+        netFromMu += d.net_h;
+        availFromMu += d.net_h / (d.mu / 100);
+      }
+    });
+    if (availFromMu > 0) muWeighted = 100 * netFromMu / availFromMu;
+  }
+  return {
+    days,
+    material_m: sum("material_m"),
+    net_h: net,
+    pos_h: sum("pos_h"),
+    off_h: sum("off_h"),
+    oth_h: sum("oth_h"),
+    chg_h: sum("chg_h"),
+    input_h: sum("input_h"),
+    idle_h: sum("idle_h"),
+    avail_h: avail,
+    mu: muWeighted != null ? muWeighted : (avail > 0 ? 100 * net / avail : null),
+    speed: speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : null,
+    active_days: days.length
+  };
+}
+
+function plantAvgFromCutterAggs(aggs) {
+  const list = Object.values(aggs).filter(Boolean);
+  if (!list.length) {
+    return {
+      material_m: 0, mu: null, speed: null, active_days: 0,
+      net_h: 0, pos_h: 0, off_h: 0, oth_h: 0, chg_h: 0, input_h: 0, idle_h: 0, avail_h: 0
+    };
+  }
+  const avg = (key) => {
+    const vals = list.map(a => a[key]).filter(v => v != null && !Number.isNaN(v));
+    if (!vals.length) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  };
+  const sum = (key) => list.reduce((a, x) => a + (x[key] || 0), 0);
+  return {
+    material_m: avg("material_m"),
+    mu: avg("mu"),
+    speed: avg("speed"),
+    active_days: avg("active_days"),
+    net_h: sum("net_h"),
+    pos_h: sum("pos_h"),
+    off_h: sum("off_h"),
+    oth_h: sum("oth_h"),
+    chg_h: sum("chg_h"),
+    input_h: sum("input_h"),
+    idle_h: sum("idle_h"),
+    avail_h: sum("avail_h")
+  };
+}
+
+function dailyAvgFromPeriod(period) {
+  const n = period.active_days || 0;
+  if (!n) return null;
+  return {
+    material_m: period.material_m / n,
+    net_h: period.net_h / n,
+    pos_h: period.pos_h / n,
+    off_h: period.off_h / n,
+    oth_h: period.oth_h / n,
+    chg_h: period.chg_h / n,
+    input_h: period.input_h / n,
+    idle_h: period.idle_h / n,
+    mu: period.mu,
+    speed: period.speed,
+    active_days: n
+  };
+}
+
+function fmt(v, digits) {
+  if (v == null || Number.isNaN(v)) return "—";
+  return Number(v).toFixed(digits);
+}
+
+const WEEKDAY_ZH = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+function dayAxisLabel(isoDay) {
+  const [y, m, d] = isoDay.split("-").map(Number);
+  const wd = WEEKDAY_ZH[new Date(y, m - 1, d).getDay()];
+  return `${isoDay.slice(5)} ${wd}`;
+}
+
+function addDaysIso(isoDay, n) {
+  const [y, m, d] = isoDay.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + n);
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${dt.getFullYear()}-${mm}-${dd}`;
+}
+
+function emptyCutterDay(isoDay, cutterId) {
+  return {
+    day: isoDay, cutter: cutterId, n: 0, avail_h: 0, input_h: 0, idle_h: 0,
+    net_h: 0, pos_h: 0, off_h: 0, oth_h: 0, chg_h: 0,
+    material_m: 0, perimeter_m: 0, speed: null, mu: null, placeholder: true
+  };
+}
+
+function weekCalendarDays() {
+  const start = DATA.week_start;
+  const out = [];
+  for (let i = 0; i < 7; i++) out.push(addDaysIso(start, i));
+  return out;
+}
+
+function deltaHtml(cur, base, digits, unit, label = "对比上周", lowerBetter = false) {
+  if (cur == null || base == null || base === 0) {
+    return `<span class="delta flat">${label} —</span>`;
+  }
+  const d = cur - base;
+  const pct = 100 * d / Math.abs(base);
+  const rose = d > 0.0001;
+  const fell = d < -0.0001;
+  const good = lowerBetter ? fell : rose;
+  const bad = lowerBetter ? rose : fell;
+  const cls = good ? "up" : (bad ? "down" : "flat");
+  const arrow = rose ? "▲" : (fell ? "▼" : "●");
+  const sign = d > 0 ? "+" : "";
+  const u = unit ? ` ${unit}` : "";
+  if (unit === "pp") {
+    return `<span class="delta ${cls}">${arrow} ${label} ${sign}${d.toFixed(digits)}${u}</span>`;
+  }
+  return `<span class="delta ${cls}">${arrow} ${label} ${sign}${d.toFixed(digits)}${u}（${sign}${pct.toFixed(1)} pp）</span>`;
+}
+
+function initSelection() {
+  (DATA.cutters || []).forEach(c => { state.selected[c.id] = true; });
+}
+
+function renderPills() {
+  const el = document.getElementById("cutterPills");
+  if (!el) return;
+  el.innerHTML = (DATA.cutters || []).map((c, i) => {
+    const on = state.selected[c.id] ? "on" : "";
+    const color = CUTTER_COLORS[i % CUTTER_COLORS.length];
+    return `<label class="pill ${on}" data-id="${c.id}" style="${on ? '' : `border-color:${color};color:${color}`}">
+      <input type="checkbox" ${state.selected[c.id] ? "checked" : ""} />
+      ${shortCutterLabel(c)}
+    </label>`;
+  }).join("");
+  el.querySelectorAll(".pill").forEach(pill => {
+    pill.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = pill.getAttribute("data-id");
+      const onCount = selectedCutters().length;
+      if (state.selected[id] && onCount <= 1) return; // keep at least one
+      state.selected[id] = !state.selected[id];
+      renderAll();
+    });
+  });
+}
+
+function buildCutterAggs(rows) {
+  const hAvail = DATA.config.h_avail;
+  const inputPer = DATA.config.input_h_per_cutter_day;
+  const by = {};
+  selectedCutters().forEach(id => {
+    const cr = rows.filter(r => r.cutter === id);
+    by[id] = aggCutterPeriod(cr, hAvail, inputPer);
+  });
+  return by;
+}
+
+function renderMainKpis(plant, monthAvg, prev) {
+  // 对齐骏泰周报：展示上月基准 + 对比上周 + 对比上月
+  // 产量「对比上月」= 上月日均 × 本周有产天，便于与本周合计对齐
+  const cards = [
+    { label: "稼动率 (%)", unit: "%", cur: plant.mu, month: monthAvg && monthAvg.mu, prev: prev && prev.mu, digits: 1 },
+    { label: "裁剪速度 (m/min)", unit: " m/min", cur: plant.speed, month: monthAvg && monthAvg.speed, prev: prev && prev.speed, digits: 2 },
+    {
+      label: "产量 Cut Material (m)",
+      unit: " m",
+      cur: plant.material_m,
+      month: monthAvg ? monthAvg.material_m * (plant.active_days || 1) : null,
+      monthDaily: monthAvg ? monthAvg.material_m : null,
+      prev: prev && prev.material_m,
+      digits: 1
+    }
+  ];
+  document.getElementById("mainKpis").innerHTML = cards.map((c, idx) => {
+    let baseLabel;
+    if (idx === 2) {
+      baseLabel = `上月日均 ${fmt(c.monthDaily, 1)} m`;
+    } else {
+      baseLabel = `上月均 ${fmt(c.month, c.digits)}${c.unit}`;
+    }
+    const unitSuffix = c.unit.trim();
+    const deltaUnit = unitSuffix === "%" ? "pp" : unitSuffix;
+    return `<div class="kpi">
+      <div class="label">${c.label}</div>
+      <div class="value">${fmt(c.cur, c.digits)}</div>
+      <div class="meta">${baseLabel}</div>
+      <div class="meta">${deltaHtml(c.cur, c.prev, c.digits, deltaUnit, "对比上周")}</div>
+      <div class="meta">${deltaHtml(c.cur, c.month, c.digits, deltaUnit, "对比上月")}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderTimeKpis(plant, monthAvg, prev) {
+  const items = [
+    { k: "net_h", label: "净裁剪 (h)", dig: 1, lowerBetter: false },
+    { k: "pos_h", label: "定位 (h)", dig: 1, lowerBetter: true },
+    { k: "off_h", label: "卸料 (h)", dig: 1, lowerBetter: true },
+    { k: "chg_h", label: "换床 (h)", dig: 1, lowerBetter: true, accent: true }
+  ];
+  document.getElementById("timeKpis").innerHTML = items.map(it => {
+    const cur = plant[it.k];
+    const m = monthAvg ? monthAvg[it.k] : null;
+    const monthEq = m == null ? null : m * (plant.active_days || 1);
+    const cls = it.accent ? "mini chg" : "mini";
+    return `<div class="${cls}">
+      <div class="k">${it.label}</div>
+      <div class="v">${fmt(cur, it.dig)}</div>
+      <div class="d">两机合计 · 上月日均 ${fmt(m, it.dig)} h</div>
+      <div class="d">${deltaHtml(cur, prev ? prev[it.k] : null, it.dig, "h", "对比上周", it.lowerBetter)}</div>
+      <div class="d">${deltaHtml(cur, monthEq, it.dig, "h", "对比上月日均×有产天", it.lowerBetter)}</div>
+    </div>`;
+  }).join("");
+}
+
+function pctOfAvail(val, avail) {
+  if (avail == null || avail <= 0 || val == null || val <= 0) return null;
+  return 100 * val / avail;
+}
+
+function cutterHashTag(c, ci) {
+  const m = String(shortCutterLabel(c) || "").match(/(\d+)/);
+  return m ? `#${m[1]}` : `#${ci + 1}`;
+}
+
+function stackPctLabelPlugin(dayMeta) {
+  // dayMeta[i] = { avail_h, net_h, pos_h, off_h } for each bar index in order of datasets draw
+  return {
+    id: "stackPctLabels",
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      const keysByDs = {};
+      chart.data.datasets.forEach((ds, dsIdx) => {
+        if (ds._pctKey) keysByDs[dsIdx] = ds._pctKey;
+      });
+      Object.keys(keysByDs).forEach(dsIdxStr => {
+        const dsIdx = Number(dsIdxStr);
+        const key = keysByDs[dsIdx];
+        const ds = chart.data.datasets[dsIdx];
+        const tag = ds && ds._cutterTag ? ds._cutterTag : "";
+        const meta = chart.getDatasetMeta(dsIdx);
+        if (meta.hidden) return;
+        meta.data.forEach((bar, i) => {
+          const day = dayMeta[dsIdx] && dayMeta[dsIdx][i];
+          if (!day || day.placeholder) return;
+          const pct = pctOfAvail(day[key], day.avail_h);
+          if (pct == null || pct < 4) return;
+          const top = Math.min(bar.y, bar.base);
+          const h = Math.abs(bar.base - bar.y);
+          if (h < 11) return;
+          const cy = top + h / 2;
+          ctx.save();
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#ffffff";
+          ctx.shadowColor = "rgba(0,0,0,0.45)";
+          ctx.shadowBlur = 2;
+          if (tag && h >= 28) {
+            ctx.textBaseline = "middle";
+            ctx.font = "700 13px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
+            ctx.fillText(`${pct.toFixed(0)}%`, bar.x, cy - 7);
+            ctx.font = "700 12px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
+            ctx.fillText(tag, bar.x, cy + 8);
+          } else {
+            ctx.textBaseline = "middle";
+            ctx.font = "700 12px Segoe UI, PingFang SC, Microsoft YaHei, sans-serif";
+            ctx.fillText(`${pct.toFixed(0)}%`, bar.x, cy);
+          }
+          ctx.restore();
+        });
+      });
+    }
+  };
+}
+
+function renderTimeStackDual(cutterAggs) {
+  destroyChart("stack");
+  const cutters = (DATA.cutters || []).filter(c => state.selected[c.id]);
+  const calendarDays = weekCalendarDays();
+  const labels = calendarDays.map(dayAxisLabel);
+
+  const datasets = [];
+  const dayMetaByDs = {};
+  const stackKeys = [
+    { key: "net_h", label: "净裁剪", color: STACK_COLORS.net, pct: true },
+    { key: "pos_h", label: "定位", color: STACK_COLORS.pos, pct: true },
+    { key: "off_h", label: "卸料", color: STACK_COLORS.off, pct: true },
+    { key: "oth_h", label: "Other", color: STACK_COLORS.oth, pct: false },
+    { key: "chg_h", label: "换床", color: STACK_COLORS.chg, pct: false }
+  ];
+
+  cutters.forEach((c, ci) => {
+    const byDay = {};
+    (cutterAggs[c.id]?.days || []).forEach(d => { byDay[d.day] = d; });
+    const padded = calendarDays.map(day => byDay[day] || emptyCutterDay(day, c.id));
+    const short = shortCutterLabel(c);
+    const cutterTag = cutterHashTag(c, ci);
+    stackKeys.forEach((sk, ski) => {
+      const dsIdx = datasets.length;
+      const ds = {
+        // 图例只展示颜色含义；机台用柱边框 / #1#2 区分
+        label: sk.label,
+        data: padded.map(d => d[sk.key] || 0),
+        backgroundColor: sk.color,
+        stack: `c${ci}`,
+        borderWidth: 0,
+        categoryPercentage: 0.78,
+        barPercentage: 0.98,
+        maxBarThickness: 48,
+        _cutterTag: cutterTag,
+        _stackKey: sk.key,
+        _legendShow: ci === 0
+      };
+      if (sk.pct) ds._pctKey = sk.key;
+      datasets.push(ds);
+      if (sk.pct) dayMetaByDs[dsIdx] = padded;
+    });
+  });
+
+  state.charts.stack = new Chart(document.getElementById("chartTimeStack"), {
+    type: "bar",
+    data: { labels, datasets },
+    plugins: [stackPctLabelPlugin(dayMetaByDs)],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            boxWidth: 10,
+            font: { size: 9 },
+            // 每种颜色只出现一次（不按机台重复）
+            generateLabels(chart) {
+              const items = [];
+              const seen = new Set();
+              chart.data.datasets.forEach((ds, i) => {
+                if (!ds || !ds._legendShow || !ds._stackKey || seen.has(ds._stackKey)) return;
+                seen.add(ds._stackKey);
+                items.push({
+                  text: ds.label,
+                  fillStyle: ds.backgroundColor,
+                  strokeStyle: ds.backgroundColor,
+                  lineWidth: 0,
+                  hidden: !chart.isDatasetVisible(i),
+                  datasetIndex: i
+                });
+              });
+              return items;
+            }
+          },
+          onClick(e, legendItem, legend) {
+            const chart = legend.chart;
+            const clicked = chart.data.datasets[legendItem.datasetIndex];
+            if (!clicked || !clicked._stackKey) return;
+            const key = clicked._stackKey;
+            const hide = chart.isDatasetVisible(legendItem.datasetIndex);
+            chart.data.datasets.forEach((ds, i) => {
+              if (ds._stackKey === key) chart.setDatasetVisibility(i, !hide);
+            });
+            chart.update();
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: {
+            font: { size: 10 },
+            maxRotation: 0,
+            autoSkip: false
+          }
+        },
+        y: {
+          stacked: true,
+          title: { display: true, text: "工时 (h)" },
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function renderAll() {
+  renderPills();
+  const weekRows = filterRows(DATA.week_rows || []);
+  const prevRows = filterRows(DATA.prev_rows || []);
+  const monthRows = filterRows(DATA.month_rows || []);
+
+  const cutterAggs = buildCutterAggs(weekRows);
+  const prevAggs = buildCutterAggs(prevRows);
+  const monthAggs = buildCutterAggs(monthRows);
+
+  const plant = plantAvgFromCutterAggs(cutterAggs);
+  const prev = Object.keys(prevAggs).length ? plantAvgFromCutterAggs(prevAggs) : null;
+  const monthPeriod = Object.keys(monthAggs).length ? plantAvgFromCutterAggs(monthAggs) : null;
+  const monthAvg = monthPeriod ? dailyAvgFromPeriod(monthPeriod) : null;
+
+  renderMainKpis(plant, monthAvg, prev);
+  renderTimeKpis(plant, monthAvg, prev);
+  renderTimeStackDual(cutterAggs);
+
+  const cutterNames = (DATA.cutters || []).map(c => shortCutterLabel(c)).join(" / ");
+  const chartNote = DATA.config.mu_source_chart ? `金标准截图：${DATA.config.mu_source_chart}；` : "";
+  const muNote = (DATA.config.mu_source === "algopex_machine_use")
+    ? `稼动率%=Algopex Machine Use（${DATA.config.mu_gold_file || "machine_use_daily.json"}，日度优先，缺则自然月单机值；周度截图展开到日）；周 MU=100×Σnet÷Σavailable；`
+    : `稼动率%=Markers 反推 100×净裁剪/(有产日×${DATA.config.h_avail}h)；待补 machine_use_daily.json；`;
+  document.getElementById("footerNote").innerHTML =
+    `Inland 双机台 ${cutterNames}。大数字=两机平均；工时卡/堆叠=两机合计/分机双柱。口径：不过滤 Reliable/Completed；速度=日均；产量=Σ Cut Material Length (m)；` +
+    muNote + chartNote +
+    `Available 由 MU 反推（Net÷MU%）；Input≈${DATA.config.input_h_per_cutter_day}h/机/日。` +
+    `对比上周=${DATA.prev_iso_key || "—"}；上月日均基准=${DATA.month_ym || "—"}` +
+    (DATA.week_month_ym ? `（本周所属月 ${DATA.week_month_ym}）` : ``) +
+    `。数据源：${(DATA.sources || []).join(" · ")}`;
+}
+
+initSelection();
+renderAll();
+
+function resizeCharts() {
+  Object.keys(state.charts).forEach((key) => {
+    const chart = state.charts[key];
+    if (chart) chart.resize();
+  });
+}
+
+function pdfTitleTag() {
+  const key = String(DATA.iso_key || "");
+  // 2026-W41 → 2026W41
+  return key.replace("-", "");
+}
+
+window.addEventListener("beforeprint", () => {
+  if (!document.body.dataset.prevTitle) {
+    document.body.dataset.prevTitle = document.title;
+  }
+  document.title = `Inland生产周报${pdfTitleTag()}`;
+  document.body.classList.add("is-printing");
+  resizeCharts();
+});
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("is-printing");
+  if (document.body.dataset.prevTitle) {
+    document.title = document.body.dataset.prevTitle;
+    delete document.body.dataset.prevTitle;
+  }
+  resizeCharts();
+});
+
+document.getElementById("btnExportPdf").addEventListener("click", () => {
+  document.body.dataset.prevTitle = document.title;
+  document.title = `Inland生产周报${pdfTitleTag()}`;
+  document.body.classList.add("is-printing");
+  resizeCharts();
+  requestAnimationFrame(() => {
+    setTimeout(() => { window.print(); }, 120);
+  });
+});
+</script>
+</body>
+</html>
